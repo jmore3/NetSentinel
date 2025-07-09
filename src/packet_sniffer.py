@@ -2,8 +2,9 @@
 
 from scapy.all import sniff, IP, TCP, UDP
 import sys
-from scapy.all import get_if_list
-from src.rule_engine import RuleEngine
+from scapy.all import get_if_list, get_if_addr
+from rule_engine import RuleEngine
+from logger import logger
 
 #Rule engine global variable
 engine = RuleEngine()
@@ -11,15 +12,15 @@ engine = RuleEngine()
 def packet_callback(packet):
     if IP in packet:
         ip_layer = packet[IP]
-        print(f"IP Packet: {ip_layer.src} -> {ip_layer.dst}")
+        logger.info(f"IP Packet: {ip_layer.src} -> {ip_layer.dst}")
 
     if TCP in packet:
         tcp_layer = packet[TCP]
-        print(f"TCP Packet: {tcp_layer.sport} -> {tcp_layer.dport}")
+        logger.info(f"TCP Packet: {tcp_layer.sport} -> {tcp_layer.dport}")
 
     elif UDP in packet:
         udp_layer = packet[UDP]
-        print(f"UDP Packet: {udp_layer.sport} -> {udp_layer.dport}")
+        logger.info(f"UDP Packet: {udp_layer.sport} -> {udp_layer.dport}")
     
     #Pass the packet to the rule engine for processing
     engine.process_packet(packet)
@@ -28,7 +29,11 @@ def choose_interface():
     interfaces = get_if_list()
     print("[*] Available network interfaces:")
     for idx, iface in enumerate(interfaces):
-        print(f" [{idx}]: {iface}")
+        try:
+            ip = get_if_addr(iface)
+        except Exception:
+            ip = "Unavailable"
+        print(f" [{idx}]: {iface}  --> IP: {ip}")
 
     try:
         choice = int(input("Enter the number of the interface to sniff: "))
@@ -50,4 +55,4 @@ def start_sniffing(interface=None, packet_count=0):
 
 if __name__ == "__main__":
     selected_interface = choose_interface()
-    start_sniffing(interface=selected_interface)
+    start_sniffing(interface=selected_interface, packet_count=10)
