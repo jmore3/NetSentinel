@@ -1,6 +1,7 @@
 # src/rule_engine.py
 import time
 from collections import defaultdict
+from logger import logger
 
 class RuleEngine:
     def __init__(self):
@@ -29,21 +30,21 @@ class RuleEngine:
                 self._check_port_scan(src_ip)
             if hasattr(packet, "len"):
                 self.byte_count[src_ip] += packet.len
-                self._check_byte_excess(src_ip)
+                self._check_data_exfil(src_ip)
 
     def _check_syn_flood(self, ip, pkt_time):
         window = 10 #seconds
         threshold = 10 #SYN packets in the window
         recent_syns = [t for t in self.syn_counts[ip] if pkt_time - t <= window]
         if len(recent_syns) >= threshold:
-            print(f"[ALERT] Possible SYN flood from {ip}")
+            logger.info(f"[ALERT] Possible SYN flood from {ip}")
     
     def _check_port_scan(self, ip):
         threshold = 50 # Number of ports scanned
         if len(self.ports_scans[ip]) >= threshold:
-            print(f"[ALERT] Possible port scan from {ip} targeting {len(self.ports_scans[ip])} ports")
+            logger.info(f"[ALERT] Possible port scan from {ip} targeting {len(self.ports_scans[ip])} ports")
 
     def _check_data_exfil(self, ip):
         threshold = 5 * 1024 * 1024 # 5 MB
         if self.byte_count[ip] >= threshold:
-            print(f"[ALERT] Possible data exfiltration from {ip} with {self.byte_count[ip]} bytes sent")
+            logger.info(f"[ALERT] Possible data exfiltration from {ip} with {self.byte_count[ip]} bytes sent")
