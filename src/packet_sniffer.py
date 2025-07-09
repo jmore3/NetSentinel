@@ -2,6 +2,7 @@
 
 from scapy.all import sniff, IP, TCP, UDP
 import sys
+from scapy.all import get_if_list
 
 def packet_callback(packet):
     if IP in packet:
