@@ -3,6 +3,10 @@
 from scapy.all import sniff, IP, TCP, UDP
 import sys
 from scapy.all import get_if_list
+from src.rule_engine import RuleEngine
+
+#Rule engine global variable
+engine = RuleEngine()
 
 def packet_callback(packet):
     if IP in packet:
@@ -16,6 +20,9 @@ def packet_callback(packet):
     elif UDP in packet:
         udp_layer = packet[UDP]
         print(f"UDP Packet: {udp_layer.sport} -> {udp_layer.dport}")
+    
+    #Pass the packet to the rule engine for processing
+    engine.process_packet(packet)
 
 def choose_interface():
     interfaces = get_if_list()
